@@ -9,6 +9,7 @@ export class ProductosService {
 
   cargando = true;
   productos: Producto[] = [];
+  productosFiltrado: Producto[] = [];
 
   constructor( private http: HttpClient) {
 
@@ -17,16 +18,57 @@ export class ProductosService {
 
   private cargarProductos(){
 
-    this.http.get('https://angular-html-43fa0.firebaseio.com/productos_idx.json').subscribe( (resp: Producto[]) => {
+    return new Promise ( ( resolve, reject) => {
+      this.http.get('https://angular-html-43fa0.firebaseio.com/productos_idx.json').subscribe( (resp: Producto[]) => {
 
-      console.log(resp);
-      this.productos = resp;
+        console.log(resp);
+        this.productos = resp;
 
 
-      setTimeout(() => {
-        this.cargando = false;
-      }, 2000);
+        setTimeout(() => {
+          this.cargando = false;
+        }, 2000);
 
+        resolve();
+
+      });
+  });
+  }
+
+  getProdcto( id: string ) {
+
+    return this.http.get(`https://angular-html-43fa0.firebaseio.com/productos/${ id }.json`);
+  }
+
+  buscarProducto( termino: string ) {
+    
+    if ( this.productos.length === 0) {
+      // cargar productos
+      this.cargarProductos().then( () => {
+        // ejecutar después de tener los productos
+        // Aplicar filtros
+        this.filtrarProductos( termino);
+      });
+
+
+    } else {
+      // aplicar el filtro
+      this.filtrarProductos( termino);
+    }
+
+    console.log( this.productosFiltrado);
+  }
+
+  private filtrarProductos ( termino: string) {
+    console.log(this.productos);
+    termino = termino.toLocaleLowerCase();
+    this.productosFiltrado = [];
+    this.productos.forEach( prod => {
+
+      const tituloLower = prod.titulo.toLocaleLowerCase();
+      if ( prod.categoria.indexOf ( termino ) >= 0 || tituloLower.indexOf( termino ) >= 0) {
+        this.productosFiltrado.push( prod );
+      }
     });
   }
 
